@@ -1,6 +1,7 @@
 """Animate the current terminal during a non-interactive command."""
 
 import os
+from contextlib import ExitStack
 from pathlib import Path
 import select
 import signal
@@ -48,7 +49,7 @@ def run(command):
   cancelled = 0
   resized = False
 
-  with tempfile.NamedTemporaryFile(dir=logs, prefix="task-", suffix=".log", delete=False) as output:
+  with tempfile.NamedTemporaryFile(dir=logs, prefix="task-", suffix=".log", delete=False) as output, ExitStack() as cleanup:
     log_path = Path(output.name)
     try:
       task = subprocess.Popen(command, stdin=subprocess.DEVNULL, stdout=output,
@@ -56,6 +57,9 @@ def run(command):
     except OSError as error:
       print(f"Could not start command: {error}", file=sys.stderr)
       return 127
+    # Also cancel on failures before/while restoring the terminal, such as a
+    # disconnected PTY, rather than leaving detached build workers running.
+    cleanup.callback(cancel_task, task)
 
     def stop(signum, frame):
       nonlocal cancelled

@@ -49,7 +49,7 @@ with tempfile.TemporaryDirectory() as directory:
   assert not (home / "state").exists()
   print("ok - redirected commands bypass the animation even when enabled")
 
-  def terminal_task(program, key=None, cancel=False):
+  def terminal_task(program, key=None, cancel=False, cancel_signal=signal.SIGINT):
     master, slave = pty.openpty()
     fcntl.ioctl(slave, termios.TIOCSWINSZ, struct.pack("HHHH", 24, 80, 0, 0))
     settings = termios.tcgetattr(slave)
@@ -64,7 +64,7 @@ with tempfile.TemporaryDirectory() as directory:
           if key:
             os.write(master, key)
           if cancel:
-            process.send_signal(signal.SIGINT)
+            process.send_signal(cancel_signal)
           sent = True
         if select.select([master], [], [], 0.05)[0]:
           output.extend(os.read(master, 65536))
@@ -104,4 +104,9 @@ with tempfile.TemporaryDirectory() as directory:
   stat = Path(f"/proc/{pid}/stat")
   assert not stat.exists() or stat.read_text().split()[2] == "Z", "task worker survived cancellation"
   print("ok - Ctrl-C cancels the task and its workers and returns 130")
+
+  for sig in (signal.SIGTERM, signal.SIGHUP):
+    status, output = terminal_task("import time; time.sleep(30)", cancel=True, cancel_signal=sig)
+    assert status == 128 + sig, (status, output)
+  print("ok - termination and hangup cancel tasks and preserve signal exit statuses")
 PY
