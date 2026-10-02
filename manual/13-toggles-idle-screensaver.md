@@ -98,18 +98,27 @@ The logo it draws is yours to change, under _Style > Screensaver_. Upload a png 
 
 ### Screensaver during a task
 
-`omarchy toggle screensaver task` enables an optional screensaver for commands launched with `omarchy screensaver run`. It is off by default and independent of the idle screensaver toggle.
+`omarchy toggle screensaver task` enables automatic screensavers for unattended tasks in new Bash terminals. It is off by default and independent of the desktop idle screensaver. Enabling it installs the optional `python-pyte` dependency. Open a new terminal afterwards, or enter an automatic session in your current terminal:
 
 ```bash
 omarchy toggle screensaver task
-omarchy screensaver run npm run build
-omarchy screensaver run make -j8
-omarchy screensaver run bash -lc 'make && make modules'
+omarchy screensaver auto
+# Run commands normally in this session:
+npm run build
+make -j8
 ```
 
-While enabled, the command runs non-interactively behind the animation in your current terminal. Its combined output is saved under `~/.local/state/omarchy/screensaver-tasks/` (or `$XDG_STATE_HOME/omarchy/screensaver-tasks/`). When it finishes, the animation stops, the terminal is restored, the output is replayed, and the command's exit status is returned. Press any ordinary key to dismiss the animation and follow the output without stopping the command. `Ctrl + C` cancels the command and its worker process group. The saved log path is printed when the command exits.
+When a task is running and no keys or mouse movements inside the terminal have occurred for ten seconds, its output is temporarily covered by the animation. Any input dismisses the animation; command completion restores the terminal automatically. Commands retain interactive stdin. Output produced behind the animation is held in memory and shown normally on return, exactly once; no task logs are written. Mouse reporting during a task can require holding Shift for native text selection.
 
-Use this for builds or non-interactive agent tasks. Commands that need password prompts or other input should run normally. Disabled and redirected invocations keep normal command input and output. This wrapper does not automatically intercept builds or change desktop idle behavior.
+Password and common confirmation prompts pause the animation. This is heuristic for ordinary CLI tools, not a universal detector of custom input prompts. Unintegrated full-screen applications remain visible rather than being assumed to be busy. The terminal session uses `python-pyte`'s public terminal-emulator interface to redraw standard text TUIs; graphics protocols are not supported.
+
+OpenCode can report working, idle, question and permission states through an optional local plugin:
+
+```bash
+omarchy screensaver auto --install-opencode
+```
+
+Quit and restart OpenCode in an automatic session after installing the plugin. Questions, permissions and turn completion stop the animation without closing OpenCode. The plugin sends only activity states and process IDs over a private local socket; it records no conversation content. Other interactive agents require equivalent activity events. `omarchy screensaver auto --shell zsh` supports an explicit Zsh session; `--idle-after 30` changes the inactivity delay. Turning the toggle off dismisses animations in existing automatic sessions and leaves their shells usable. Desktop idle/lock behavior is unchanged.
 
 ### The lock screen
 
