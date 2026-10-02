@@ -15,6 +15,7 @@ From the terminal, the same switches are `omarchy toggle <thing>`. Run `omarchy 
 | Stay awake (no idle lock) | `Super + Ctrl + I` | `omarchy toggle idle` |
 | Crash capture | — | `omarchy toggle crash-capture` |
 | Screensaver | — | `omarchy toggle screensaver` |
+| Screensaver during tasks | — | `omarchy toggle screensaver task` |
 | [Herdr](https://herdr.dev) theme sync | — | `omarchy toggle theme sync` |
 | Menu bar | `Super + Shift + Space` | `omarchy toggle bar` |
 | Touchpad | `XF86TouchpadToggle` | `omarchy toggle touchpad` |
@@ -94,6 +95,21 @@ You can start it on demand from _System > Screensaver_ (`Super + Esc`), which fo
 `omarchy toggle screensaver` is what turns the idle one off, if you'd rather go straight from working to locked. It needs a terminal it knows how to configure — Alacritty, Foot, Ghostty, or Kitty — and will tell you so if your default terminal is something else.
 
 The logo it draws is yours to change, under _Style > Screensaver_. Upload a png or svg and Omarchy converts it to ASCII. See [branding](41-branding.md).
+
+### Screensaver during a task
+
+`omarchy toggle screensaver task` enables an optional screensaver for commands launched with `omarchy screensaver run`. It is off by default and independent of the idle screensaver toggle.
+
+```bash
+omarchy toggle screensaver task
+omarchy screensaver run npm run build
+omarchy screensaver run make -j8
+omarchy screensaver run bash -lc 'make && make modules'
+```
+
+While enabled, the command runs non-interactively behind the animation in your current terminal. Its combined output is saved under `~/.local/state/omarchy/screensaver-tasks/` (or `$XDG_STATE_HOME/omarchy/screensaver-tasks/`). When it finishes, the animation stops, the terminal is restored, the output is replayed, and the command's exit status is returned. Press any ordinary key to dismiss the animation and follow the output without stopping the command. `Ctrl + C` cancels the command and its worker process group. The saved log path is printed when the command exits.
+
+Use this for builds or non-interactive agent tasks. Commands that need password prompts or other input should run normally. Disabled and redirected invocations keep normal command input and output. This wrapper does not automatically intercept builds or change desktop idle behavior.
 
 ### The lock screen
 

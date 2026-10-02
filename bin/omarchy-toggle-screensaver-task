@@ -1,0 +1,13 @@
+#!/bin/bash
+
+# omarchy:summary=Toggle the screensaver for commands run with omarchy screensaver run
+# omarchy:group=toggle
+# omarchy:name=screensaver task
+
+omarchy-toggle screensaver-task-on
+
+if omarchy-toggle-enabled screensaver-task-on; then
+  omarchy-notification-send -g 󱄄 "Task screensaver enabled"
+else
+  omarchy-notification-send -g 󱄄 "Task screensaver disabled"
+fi
